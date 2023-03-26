@@ -2,7 +2,6 @@
   <button type="button" @click="login">ログイン</button>
 </template>
 <script setup lang="ts">
-import { useAuth } from "~~/composables/useAuth";
 const login = () => {
   const router = useRouter();
   const { signIn } = useAuth();

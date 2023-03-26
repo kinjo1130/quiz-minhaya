@@ -8,7 +8,6 @@
   </form>
 </template>
 <script lang="ts" setup>
-import { useAuth } from "~/composables/useAuth";
 const router = useRouter();
 // リアルタイムにログインしているユーザーの情報を取得する
 onMounted(async () => {
@@ -26,7 +25,7 @@ const createRoom = async () => {
   console.log("現在ログインしているユーザーの情報", await loginUser.value?.uid);
   const createdRoomId = await useNuxtApp().$createRoom(
     loginUser.value?.uid as string,
-    loginUser.value?.displayName as string
+    loginUser.value?.name as string
   );
   router.push(`/room/${createdRoomId}`);
 };
@@ -36,7 +35,7 @@ const joinRoom = async () => {
   console.log("現在ログインしているユーザーの情報", await loginUser.value?.uid);
   const joinedRoomId = await useNuxtApp().$joinRoom(
     loginUser.value?.uid as string,
-    loginUser.value?.displayName as string,
+    loginUser.value?.name as string,
     invitedCode.value
   );
   router.push(`/room/${joinedRoomId}`);

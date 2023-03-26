@@ -1,6 +1,6 @@
 <template>
   <p>クイズ個別:{{ useRoute().params.id }}</p>
-  <p>問題: {{ getQuiz?.question }}</p>
+  <p>問題: {{ currentQuiz?.question }}</p>
   <button type="button" @click="answeredQuiz" :disabled="answeredQuizFlag">
     わかった！！
   </button>
@@ -15,21 +15,23 @@
 </template>
 <script setup lang="ts">
 import { arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { Quiz } from "../../composables/useQuizList";
-const getQuiz = ref<Quiz | undefined>({
+import type { User, Question } from "~/types";
+const currentQuiz = ref<Question>({
   id: "",
+  isRemoved: false,
   question: "",
   answer: "",
 });
 const answeredQuizFlag = ref(false);
-const answerPerson = ref({
+const answerPerson = ref<User>({
   name: "",
   uid: "",
 });
-const loginUser = ref({
+const loginUser = ref<User>({
   name: "",
   uid: "",
 });
+
 const answerValue = ref("");
 onMounted(async () => {
   await useNuxtApp().$getQuestions();
@@ -38,43 +40,43 @@ onMounted(async () => {
   const quizId = useRoute().params.id as string;
   console.log("quizList", quizList.value);
   const quiz = quizList.value.find((quiz) => quiz.id === quizId);
+  if(!quiz) {
+    // クイズがないのは困る
+    // TODO: 適当な処理を書く
+    return;
+  }
   console.log("quiz", quiz);
   const user = await useNuxtApp().$existCurrentUser();
   loginUser.value = {
-    name: (await user?.displayName) || "",
-    uid: (await user?.uid) || "",
+    name: user?.name || "",
+    uid: user?.uid || "",
   };
-  getQuiz.value = quiz;
+  currentQuiz.value = quiz;
   console.log("getQuiz", quiz);
   console.log("====================================");
   const { $firebaseDB } = useNuxtApp();
-  const roomId = localStorage.getItem("roomId") as string;
+  const roomId = localStorage.getItem("roomId")!;
   console.log("roomId", roomId);
-  const collectionRef = doc($firebaseDB, "rooms", roomId);
-  onSnapshot(collectionRef, (doc) => {
-    console.log("Current data: ", doc.data());
-    if (doc.data()?.firstRespondent.length > 0) {
+  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+  onSnapshot(roomRef, (doc) => {
+    const room = doc.data();    
+    console.log("Current data: ", room);
+    if(!room) {
+      // TODO: returnする前に適当な場所にリダイレクトすべき
+      return;
+    }
+    if (room.respondents.length >= room.respondentLimit) {
       answeredQuizFlag.value = true;
       // 回答者の名前を取得する
       console.log("回答者の名前取得");
-      useNuxtApp()
-        .$getRoomInfo()
-        .then((res) => {
-          console.log("usersInRoom", res);
-          // todo: ここの処理が少し重いので、改善したい
-          const answerPersonInfo = res?.usersInRoom.find(
-            (user: any) => user.uid === doc.data()?.firstRespondent[0].uid
-          );
-          answerPerson.value = {
-            name: answerPersonInfo?.name,
-            uid: answerPersonInfo?.uid,
-          };
-          console.log("answerPersonInfo", answerPersonInfo);
-          console.log("answerPerson", answerPerson.value);
-        })
-        .catch((error) => {
-          console.log("error", error);
-        });
+
+      console.log("usersInRoom", room.users);
+      // todo: ここの処理が少し重いので、改善したい
+      answerPerson.value = room.users.find(
+        (user) => user.uid === room.respondents[0].uid
+      )!;
+
+      console.log("answerPerson", answerPerson.value);
     }
   });
 });
@@ -83,13 +85,13 @@ const answeredQuiz = async () => {
   console.log("answeredQuiz");
   const user = await useNuxtApp().$existCurrentUser();
   const { $firebaseDB } = useNuxtApp();
-  const roomId = localStorage.getItem("roomId") as string;
-  const roomRef = await doc($firebaseDB, "rooms", roomId);
-  console.log("回答者の名前を保存する", await user?.displayName);
+  const roomId = localStorage.getItem("roomId")!;
+  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+  console.log("回答者の名前を保存する", user?.name);
   await updateDoc(roomRef, {
-    firstRespondent: arrayUnion({
+    respondents: arrayUnion({
       uid: user?.uid,
-      name: user?.displayName,
+      name: user?.name,
     }),
   });
 };
@@ -97,13 +99,13 @@ const answeredQuiz = async () => {
 const judgeAnswer = async () => {
   console.log("judgeAnswer");
   if (!answerValue) return;
-  if (answerValue.value === getQuiz.value?.answer) {
+  if (answerValue.value === currentQuiz.value.answer) {
     console.log("正解");
-    const roomId = localStorage.getItem("roomId") as string;
+    const roomId = localStorage.getItem("roomId")!;
     const { $firebaseDB } = useNuxtApp();
-    const roomRef = doc($firebaseDB, "rooms", roomId);
+    const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
     await updateDoc(roomRef, {
-      alreadyQuizID: arrayUnion(getQuiz.value?.id),
+      answeredQuestions: arrayUnion(currentQuiz.value?.id),
     });
   } else {
     console.log("不正解");

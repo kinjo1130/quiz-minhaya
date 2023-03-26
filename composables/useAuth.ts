@@ -5,15 +5,12 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { collection, doc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
-interface LoginUser {
-  uid: string;
-  token: string;
-  displayName: string;
-}
+import type { AuthUser } from "~/types";
+
 export const useAuth = () => {
-  const loginUser = useState<LoginUser | null>("loginUser", () => null);
+  const loginUser = useState<AuthUser | null>("loginUser", () => null);
   async function signIn() {
     return await new Promise<void>((resolve, reject) => {
       const auth = getAuth();
@@ -28,18 +25,18 @@ export const useAuth = () => {
               loginUser.value = {
                 token: idToken,
                 uid: userCredential.user.uid,
-                displayName: userCredential.user.displayName || "",
+                name: userCredential.user.displayName || "",
               };
               // 認証したらfirestoreにユーザー情報を保存する
               const userRef = doc(
                 $firebaseDB,
                 "users",
                 loginUser.value.uid
-              );
+              ).withConverter(firestoreAuthUserConverter);
               const docRef = await setDoc(userRef, {
                 token: loginUser.value.token,
                 uid: loginUser.value.uid,
-                displayName: loginUser.value.displayName,
+                name: loginUser.value.name,
               });
               console.log("Document written with ID: ", await docRef);
               resolve();
@@ -89,7 +86,7 @@ export const useAuth = () => {
                 loginUser.value = {
                   token: idtoken,
                   uid: user.uid,
-                  displayName: user.displayName || "",
+                  name: user.displayName || "",
                 };
                 console.log("useAuth", loginUser.value);
                 resolve();

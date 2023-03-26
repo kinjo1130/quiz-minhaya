@@ -2,7 +2,7 @@
   <p>RoomId:{{ useRoute().params.id }}</p>
   <p>参加しているユーザーリスト</p>
   <ul>
-    <li v-for="user in usersInRoom" :key="user.id">
+    <li v-for="user in usersInRoom" :key="user.uid">
       {{ user.name }}
     </li>
   </ul>
@@ -16,14 +16,14 @@
     required
   /> -->
   <!-- <label>出題問題選択</label>
-  <select v-model="quizType" @change="getMyCreateQuizList">
+  <select v-model="quizType" @change="getOriginalQuizList">
     <option value="random">ランダム</option>
     <option value="MyCreateQuiz">自作問題</option>
   </select> -->
-  <!-- <div v-if="myCreateQuizList.length > 0">
+  <!-- <div v-if="originalQuizList.length > 0">
     <h4>自作問題一覧</h4>
     <select>
-      <option v-for="quiz in myCreateQuizList" :key="quiz.title">
+      <option v-for="quiz in originalQuizList" :key="quiz.title">
         {{ quiz.title }}
       </option>
     </select>
@@ -35,28 +35,22 @@
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   onSnapshot,
   updateDoc,
 } from "firebase/firestore";
-type UserInRoom = {
-  id: string;
-  name: string;
-};
-type MyCreateQuizList = {
-  title: string;
-  description: string;
-};
+
+import type { User, QuizList, QuizType, Question } from "~/types";
+
 const router = useRouter();
 // ルームに参加しているユーザーの情報
-const usersInRoom = ref<UserInRoom[]>([]);
+const usersInRoom = ref<User[]>([]);
 // クイズする問題数
 const quizCount = ref(2);
 // クイズに使用する問題の種類
-const quizType = ref("random");
+const quizType = ref<QuizType>("builtin");
 // 自作問題リスト
-const myCreateQuizList = ref<MyCreateQuizList[]>([]);
+const originalQuizList = ref<QuizList[]>([]);
 // 自作問題の中で選択した問題の種類
 const selectedQuiz = ref("random");
 
@@ -65,14 +59,19 @@ onMounted(async () => {
   const roomId = useRoute().params.id as string;
   // localStorageにroomIdを保存する
   localStorage.setItem("roomId", roomId);
-  const collectionRef = doc($firebaseDB, "rooms", roomId);
-  onSnapshot(collectionRef, async (doc) => {
-    console.log("Current data: ", doc.data());
-    usersInRoom.value = doc.data()?.usersInRoom;
+  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+  onSnapshot(roomRef, async (doc) => {
+    const room = doc.data();    
+    console.log("Current data: ", room);
+    if(!room) {
+      // TODO: returnする前に適当な場所にリダイレクトすべき
+      return;
+    }
+    usersInRoom.value = room.users;
     // ここで、他のブラウザとfirestoreが同期している
-    if (doc.data()?.isQuizStarted === true && doc.data()?.activeQuestion) {
+    if (room.isQuizStarted === true && room.activeQuestion) {
       // todo: ここで無限ループ的なことが起きてるので修正
-      router.push(`/quiz/${doc.data()?.activeQuestion}`);
+      router.push(`/quiz/${room.activeQuestion}`);
     }
   });
 });
@@ -82,26 +81,20 @@ const startQuiz = async () => {
   const { $firebaseDB } = useNuxtApp();
   const { quizList, setQuizList } = useQuizList();
   const roomId = useRoute().params.id as string;
-  const roomRef = doc($firebaseDB, "rooms", roomId);
+  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
   // スタートさせるときに、クイズの情報を取得してくる
   const quizRef = collection(
     $firebaseDB,
     "quiz",
     // ここで、クイズの種類を指定する
     "金城クイズ",
-    "question"
-  );
+    "questions"
+  ).withConverter(firestoreQuestionConverter);
   const quizSnapshot = await getDocs(quizRef);
   console.log("quizSnapshot", quizSnapshot.docs);
-  const quizData = quizSnapshot.docs
-    .filter((doc) => doc.data().isRemoved === false)
-    .map((doc) => {
-      return {
-        id: doc.id,
-        question: doc.data().question as string,
-        answer: doc.data().answer as string,
-      };
-    });
+  const quizData: Question[] = quizSnapshot.docs
+    .filter((doc) => !doc.data().isRemoved)
+    .map((doc) => doc.data());
   console.log(quizData);
   // composablesにクイズの情報を保存する
   setQuizList(quizData);
@@ -116,14 +109,14 @@ const startQuiz = async () => {
   });
 };
 // 自作問題リストを取得する
-// const getMyCreateQuizList = async () => {
+// const getOriginalQuizList = async () => {
 //   if (quizType.value !== "MyCreateQuiz") return;
 //   const { $firebaseDB } = useNuxtApp();
 //   const quizRef = collection($firebaseDB, "quiz");
 //   const quizSnapshot = await getDocs(quizRef);
 //   const quizData = quizSnapshot.docs.map((doc) => doc.data());
 //   console.log(quizData);
-//   myCreateQuizList.value = quizData;
+//   originalQuizList.value = quizData;
 // };
 
 // 招待をする側の処理
