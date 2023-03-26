@@ -71,7 +71,6 @@ onMounted(async () => {
     usersInRoom.value = doc.data()?.usersInRoom;
     // ここで、他のブラウザとfirestoreが同期している
     if (doc.data()?.isQuizStarted === true && doc.data()?.activeQuestion) {
-      const roomId = useRoute().params.id as string;
       await updateDoc(collectionRef, {
         quizType: quizType.value,
         quizCount: quizCount.value,
