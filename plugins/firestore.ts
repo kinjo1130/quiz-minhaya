@@ -14,7 +14,7 @@ export default defineNuxtPlugin(() => ({
       const { $firebaseDB } = useNuxtApp();
       const roomsRef = collection($firebaseDB, "rooms");
       const docRef = await addDoc(roomsRef, {
-        roomInUsers: [
+        usersInRoom: [
           {
             uid: uid,
             name: name,
@@ -38,7 +38,7 @@ export default defineNuxtPlugin(() => ({
       console.log("joinRoom");
       const roomRef = doc($firebaseDB, "rooms", roomId);
       await updateDoc(roomRef, {
-        roomInUsers: arrayUnion({
+        usersInRoom: arrayUnion({
           uid: uid,
           name: name,
         }),
