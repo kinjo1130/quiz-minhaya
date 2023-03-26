@@ -11,7 +11,6 @@
 import { useAuth } from "~/composables/useAuth";
 const router = useRouter();
 // リアルタイムにログインしているユーザーの情報を取得する
-
 onMounted(async () => {
   const user = await useNuxtApp().$existCurrentUser();
   if (!user) {

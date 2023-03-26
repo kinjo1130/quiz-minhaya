@@ -22,6 +22,7 @@ type RoomInUser = {
   id: string;
   name: string;
 };
+const router = useRouter();
 const roomInUsers = ref<RoomInUser[]>([]);
 onMounted(async () => {
   const { $firebaseDB } = useNuxtApp();
@@ -31,6 +32,15 @@ onMounted(async () => {
     console.log("Current data: ", doc.data());
     roomInUsers.value = doc.data()?.roomInUsers;
   });
+  // ルームが削除されていた時/に戻す処理
+  const docSnap = await getDoc(collectionRef);
+  if (docSnap.exists()) {
+    console.log("Document data:", docSnap.data());
+  } else {
+    console.log("No such document!");
+    router.push("/");
+  }
+
 });
 // TODO:クイズをスタートしたら異なるブラウザ間でリアルタイムにクイズの情報を取得する
 const startQuiz = async () => {
