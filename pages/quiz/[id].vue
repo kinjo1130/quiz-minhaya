@@ -7,9 +7,10 @@
   <p>回答者: {{ answerPerson.name }}</p>
   <p>回答者uid:{{ answerPerson.uid }}</p>
   <p>ログインしているゆーざーのuid:{{ loginUser.uid }}</p>
-  <form v-if="answerPerson.uid === loginUser.uid">
+  <form v-if="answerPerson.uid === loginUser.uid" @submit.prevent="judgeAnswer">
     <label>解答欄</label>
-    <input type="text" >
+    <input type="text" v-model="answerValue" />
+    <button>回答する</button>
   </form>
 </template>
 <script setup lang="ts">
@@ -22,15 +23,17 @@ const getQuiz = ref<Quiz | undefined>({
 });
 const answeredQuizFlag = ref(false);
 const answerPerson = ref({
-    name: "",
-    uid: "",
+  name: "",
+  uid: "",
 });
 const loginUser = ref({
   name: "",
   uid: "",
 });
+const answerValue = ref("");
 onMounted(async () => {
   await useNuxtApp().$getQuestions();
+  console.log("====================================");
   const { quizList } = useQuizList();
   const quizId = useRoute().params.id as string;
   console.log("quizList", quizList.value);
@@ -38,12 +41,15 @@ onMounted(async () => {
   console.log("quiz", quiz);
   const user = await useNuxtApp().$existCurrentUser();
   loginUser.value = {
-    name: await user?.displayName || "",
-    uid: await user?.uid || "",
+    name: (await user?.displayName) || "",
+    uid: (await user?.uid) || "",
   };
   getQuiz.value = quiz;
+  console.log("getQuiz", quiz);
+  console.log("====================================");
   const { $firebaseDB } = useNuxtApp();
   const roomId = localStorage.getItem("roomId") as string;
+  console.log("roomId", roomId);
   const collectionRef = doc($firebaseDB, "rooms", roomId);
   onSnapshot(collectionRef, (doc) => {
     console.log("Current data: ", doc.data());
@@ -88,8 +94,20 @@ const answeredQuiz = async () => {
   });
 };
 
-const judgeAnswer = () => {
+const judgeAnswer = async () => {
   console.log("judgeAnswer");
+  if (!answerValue) return;
+  if (answerValue.value === getQuiz.value?.answer) {
+    console.log("正解");
+    const roomId = localStorage.getItem("roomId") as string;
+    const { $firebaseDB } = useNuxtApp();
+    const roomRef = doc($firebaseDB, "rooms", roomId);
+    await updateDoc(roomRef, {
+      alreadyQuizID: arrayUnion(getQuiz.value?.id),
+    });
+  } else {
+    console.log("不正解");
+  }
 };
 // 使用してない問題idがある場合は、その問題idを取得する
 </script>

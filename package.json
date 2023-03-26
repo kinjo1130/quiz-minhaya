@@ -3,10 +3,11 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev && firebase emulators:start --import=./firestoreData --export-on-exit=./firestoreData",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "emulators": "firebase emulators:start --import=./firestoreData --export-on-exit=./firestoreData"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.6.4",

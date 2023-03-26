@@ -8,26 +8,26 @@
   </ul>
   <button type="button" @click="startQuiz">クイズをスタートする</button>
   <!-- こいつはランダムの時にしか出ないようにする -->
-  <label>問題数設定</label>
+  <!-- <label>問題数設定</label>
   <input
     type="number"
     placeholder="問題数を決めてね"
     v-model.number="quizCount"
     required
-  />
-  <label>出題問題選択</label>
+  /> -->
+  <!-- <label>出題問題選択</label>
   <select v-model="quizType" @change="getMyCreateQuizList">
     <option value="random">ランダム</option>
     <option value="MyCreateQuiz">自作問題</option>
-  </select>
-  <div v-if="myCreateQuizList.length > 0">
+  </select> -->
+  <!-- <div v-if="myCreateQuizList.length > 0">
     <h4>自作問題一覧</h4>
     <select>
       <option v-for="quiz in myCreateQuizList" :key="quiz.title">
         {{ quiz.title }}
       </option>
     </select>
-  </div>
+  </div> -->
   <button type="button" @click="publishInviteCode">招待コード発行</button>
   <p>招待コード:{{ invitationCode }}</p>
 </template>
@@ -71,10 +71,7 @@ onMounted(async () => {
     usersInRoom.value = doc.data()?.usersInRoom;
     // ここで、他のブラウザとfirestoreが同期している
     if (doc.data()?.isQuizStarted === true && doc.data()?.activeQuestion) {
-      await updateDoc(collectionRef, {
-        quizType: quizType.value,
-        quizCount: quizCount.value,
-      });
+      // todo: ここで無限ループ的なことが起きてるので修正
       router.push(`/quiz/${doc.data()?.activeQuestion}`);
     }
   });
@@ -86,19 +83,16 @@ const startQuiz = async () => {
   const { quizList, setQuizList } = useQuizList();
   const roomId = useRoute().params.id as string;
   const roomRef = doc($firebaseDB, "rooms", roomId);
-  await updateDoc(roomRef, {
-    isQuizStarted: true,
-    quizType: quizType.value,
-    quizCount: quizCount.value,
-  });
   // スタートさせるときに、クイズの情報を取得してくる
   const quizRef = collection(
     $firebaseDB,
     "quiz",
-    selectedQuiz.value,
-    "questions"
+    // ここで、クイズの種類を指定する
+    "金城クイズ",
+    "question"
   );
   const quizSnapshot = await getDocs(quizRef);
+  console.log("quizSnapshot", quizSnapshot.docs);
   const quizData = quizSnapshot.docs
     .filter((doc) => doc.data().isRemoved === false)
     .map((doc) => {
@@ -117,19 +111,20 @@ const startQuiz = async () => {
   router.push(`/quiz/${quizData[randomNum].id}`);
   // 今出題されているクイズのidを保存する
   await updateDoc(roomRef, {
+    isQuizStarted: true,
     activeQuestion: quizData[randomNum].id,
   });
 };
 // 自作問題リストを取得する
-const getMyCreateQuizList = async () => {
-  if (quizType.value !== "MyCreateQuiz") return;
-  const { $firebaseDB } = useNuxtApp();
-  const quizRef = collection($firebaseDB, "quiz");
-  const quizSnapshot = await getDocs(quizRef);
-  const quizData = quizSnapshot.docs.map((doc) => doc.data());
-  console.log(quizData);
-  myCreateQuizList.value = quizData;
-};
+// const getMyCreateQuizList = async () => {
+//   if (quizType.value !== "MyCreateQuiz") return;
+//   const { $firebaseDB } = useNuxtApp();
+//   const quizRef = collection($firebaseDB, "quiz");
+//   const quizSnapshot = await getDocs(quizRef);
+//   const quizData = quizSnapshot.docs.map((doc) => doc.data());
+//   console.log(quizData);
+//   myCreateQuizList.value = quizData;
+// };
 
 // 招待をする側の処理
 const invitationCode = ref("");

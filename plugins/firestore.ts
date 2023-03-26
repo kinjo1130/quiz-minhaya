@@ -15,6 +15,9 @@ export default defineNuxtPlugin(() => ({
       const { $firebaseDB } = useNuxtApp();
       const roomsRef = collection($firebaseDB, "rooms");
       const docRef = await addDoc(roomsRef, {
+        activeQuestion: "",
+        alreadyQuizID: [],
+        firstRespondent: [],
         usersInRoom: [
           {
             uid: uid,
@@ -55,22 +58,28 @@ export default defineNuxtPlugin(() => ({
         return;
       }
       const querySnapshot = await getDoc(doc($firebaseDB, "rooms", roomId));
-      console.log("ルーム情報を取得",querySnapshot.data());
+      console.log("ルーム情報を取得", querySnapshot.data());
       return querySnapshot.data();
     },
     async getQuestions() {
       const { $firebaseDB } = useNuxtApp();
       const { setQuizList } = useQuizList();
+      console.log("aaa")
       const roomInfo = await useNuxtApp().$getRoomInfo();
       const querySnapshot = await getDocs(
-        collection($firebaseDB, "quiz", roomInfo!.quizType, "questions")
+        collection($firebaseDB, "quiz", "金城クイズ", "question")
       );
-      const quizData = querySnapshot.docs.filter((doc) => doc.data().isRemoved === false).map((doc) => {
-        return {
-          id: doc.id,
-          question: doc.data().question as string,
-          answer: doc.data().answer as string,
-        }});
+      console.log("ccc")
+      const quizData = querySnapshot.docs
+        .filter((doc) => doc.data().isRemoved === false)
+        .map((doc) => {
+          return {
+            id: doc.id,
+            question: doc.data().question as string,
+            answer: doc.data().answer as string,
+          };
+        });
+      console.log("クイズデータを取得", quizData);
       setQuizList(quizData);
     },
   },
