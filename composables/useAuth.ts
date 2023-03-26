@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
+import { collection, doc, setDoc } from "firebase/firestore";
 
 interface LoginUser {
   uid: string;
@@ -17,17 +18,29 @@ export const useAuth = () => {
     return await new Promise<void>((resolve, reject) => {
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
+      const { $firebaseDB } = useNuxtApp();
 
       return signInWithPopup(auth, provider)
         .then((userCredential) => {
           userCredential.user
             .getIdToken()
-            .then((idToken) => {
+            .then(async (idToken) => {
               loginUser.value = {
                 token: idToken,
                 uid: userCredential.user.uid,
                 displayName: userCredential.user.displayName || "",
               };
+              // 認証したらfirestoreにユーザー情報を保存する
+              const userRef = doc(
+                $firebaseDB,
+                "users",
+                loginUser.value.uid
+              );
+              const docRef = await setDoc(userRef, {
+                uid: loginUser.value.uid,
+                displayName: loginUser.value.displayName,
+              });
+              console.log("Document written with ID: ", await docRef);
               resolve();
             })
             .catch(reject);
