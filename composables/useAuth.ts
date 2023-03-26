@@ -37,6 +37,7 @@ export const useAuth = () => {
                 loginUser.value.uid
               );
               const docRef = await setDoc(userRef, {
+                token: loginUser.value.token,
                 uid: loginUser.value.uid,
                 displayName: loginUser.value.displayName,
               });
