@@ -4,6 +4,7 @@ import {
   arrayUnion,
   collection,
   doc,
+  getDoc,
   getDocs,
   updateDoc,
 } from "firebase/firestore";
@@ -45,6 +46,32 @@ export default defineNuxtPlugin(() => ({
         }),
       });
       return roomId;
+    },
+    async getRoomInfo() {
+      const { $firebaseDB } = useNuxtApp();
+      const roomId = localStorage.getItem("roomId") || "";
+      if (!roomId) {
+        console.log("ルームが存在しません");
+        return;
+      }
+      const querySnapshot = await getDoc(doc($firebaseDB, "rooms", roomId));
+      console.log(querySnapshot.data());
+      return querySnapshot.data();
+    },
+    async getQuestions() {
+      const { $firebaseDB } = useNuxtApp();
+      const { setQuizList } = useQuizList();
+      const roomInfo = await useNuxtApp().$getRoomInfo();
+      const querySnapshot = await getDocs(
+        collection($firebaseDB, "quiz", roomInfo!.quizType, "questions")
+      );
+      const quizData = querySnapshot.docs.filter((doc) => doc.data().isRemoved === false).map((doc) => {
+        return {
+          id: doc.id,
+          question: doc.data().question as string,
+          answer: doc.data().answer as string,
+        }});
+      setQuizList(quizData);
     },
   },
 }));
