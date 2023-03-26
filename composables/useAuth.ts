@@ -91,6 +91,7 @@ export const useAuth = () => {
                   uid: user.uid,
                   displayName: user.displayName || "",
                 };
+                console.log("useAuth", loginUser.value);
                 resolve();
               })
               .catch(reject);

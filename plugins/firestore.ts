@@ -55,7 +55,7 @@ export default defineNuxtPlugin(() => ({
         return;
       }
       const querySnapshot = await getDoc(doc($firebaseDB, "rooms", roomId));
-      console.log(querySnapshot.data());
+      console.log("ルーム情報を取得",querySnapshot.data());
       return querySnapshot.data();
     },
     async getQuestions() {
