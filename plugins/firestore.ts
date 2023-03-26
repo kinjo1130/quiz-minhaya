@@ -20,6 +20,7 @@ export default defineNuxtPlugin(() => ({
             name: name,
           },
         ],
+        isQuizStarted: false,
       });
       console.log("Document written with ID: ", docRef.id);
       return docRef.id;
