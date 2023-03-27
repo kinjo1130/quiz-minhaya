@@ -61,7 +61,7 @@ onMounted(async () => {
   localStorage.setItem("roomId", roomId);
   const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
   onSnapshot(roomRef, async (doc) => {
-    const room = doc.data();    
+    const room = doc.data();
     console.log("Current data: ", room);
     if(!room) {
       // TODO: returnする前に適当な場所にリダイレクトすべき

@@ -69,6 +69,7 @@ export default defineNuxtPlugin(() => ({
       const querySnapshot = await getDocs(
         collection($firebaseDB, "quiz", "金城クイズ", "questions").withConverter(firestoreQuestionConverter)
       );
+      console.log("取得",querySnapshot.docs)
       console.log("ccc")
       const quizData = querySnapshot.docs
         .filter((doc) => doc.data().isRemoved === false)

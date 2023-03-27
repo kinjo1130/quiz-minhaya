@@ -15,6 +15,7 @@
 </template>
 <script setup lang="ts">
 import { arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { e } from "ofetch/dist/error-04138797";
 import type { User, Question } from "~/types";
 const currentQuiz = ref<Question>({
   id: "",
@@ -40,7 +41,7 @@ onMounted(async () => {
   const quizId = useRoute().params.id as string;
   console.log("quizList", quizList.value);
   const quiz = quizList.value.find((quiz) => quiz.id === quizId);
-  if(!quiz) {
+  if (!quiz) {
     // クイズがないのは困る
     // TODO: 適当な処理を書く
     return;
@@ -57,13 +58,21 @@ onMounted(async () => {
   const { $firebaseDB } = useNuxtApp();
   const roomId = localStorage.getItem("roomId")!;
   console.log("roomId", roomId);
-  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(
+    firestoreRoomConverter
+  );
   onSnapshot(roomRef, (doc) => {
-    const room = doc.data();    
+    const room = doc.data();
     console.log("Current data: ", room);
-    if(!room) {
+    if (!room) {
       // TODO: returnする前に適当な場所にリダイレクトすべき
       return;
+    }
+    // activeQuestionが変更されたら次の問題に行く
+    if (room.activeQuestion !== quizId) {
+      const router = useRouter();
+      console.log("activeQuestionが変更されたので、次の問題に行く");
+      router.push(`/quiz/${room.activeQuestion}`);
     }
     if (room.respondents.length >= room.respondentLimit) {
       answeredQuizFlag.value = true;
@@ -86,7 +95,9 @@ const answeredQuiz = async () => {
   const user = await useNuxtApp().$existCurrentUser();
   const { $firebaseDB } = useNuxtApp();
   const roomId = localStorage.getItem("roomId")!;
-  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(
+    firestoreRoomConverter
+  );
   console.log("回答者の名前を保存する", user?.name);
   await updateDoc(roomRef, {
     respondents: arrayUnion({
@@ -103,10 +114,46 @@ const judgeAnswer = async () => {
     console.log("正解");
     const roomId = localStorage.getItem("roomId")!;
     const { $firebaseDB } = useNuxtApp();
-    const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+    const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(
+      firestoreRoomConverter
+    );
     await updateDoc(roomRef, {
       answeredQuestions: arrayUnion(currentQuiz.value?.id),
     });
+    // 次の問題に行く
+    // 回答したクイズから削除して、次のクイズに行く
+    const quizList = useQuizList().quizList.value;
+    const getRoomInfo = await useNuxtApp().$getRoomInfo();
+    if (!getRoomInfo) return;
+    const quizListId = quizList.map((quiz) => quiz.id);
+    // すでに回答した問題idと、クイズリストのidを結合して、重複しているものを取得する
+    const filterAlreadyAnsweredQuiz = getRoomInfo.answeredQuestions
+      .concat(quizListId)
+      .filter(function (x, i, self) {
+        return self.indexOf(x) === i && i !== self.lastIndexOf(x);
+      });
+    console.log("====================================");
+    console.log("getRoomInfo", getRoomInfo);
+    console.log("quizList", quizList);
+    console.log("alreadtAnsweredQuiz", filterAlreadyAnsweredQuiz);
+    // すでに回答した問題idと重複してないものを取得する
+    const nextQuizId = quizListId.filter(
+      (id) => !filterAlreadyAnsweredQuiz.includes(id)
+    );
+    if (nextQuizId) {
+      console.log("nextQuiz", nextQuizId);
+      const router = useRouter();
+      const randomNum = Math.floor(Math.random() * nextQuizId.length);
+      // 次の問題に行く前に、回答者を初期化する
+      await updateDoc(roomRef, {
+        activeQuestion: nextQuizId[randomNum],
+        respondents: [],
+      });
+      router.push(`/quiz/${nextQuizId[randomNum]}`);
+    }
+    else{
+      console.log("すべての問題を回答しました");
+    }
   } else {
     console.log("不正解");
   }
