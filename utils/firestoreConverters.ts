@@ -1,30 +1,28 @@
 import type { AuthUser, Question, Room, User } from "~/types";
-import type { QueryDocumentSnapshot } from "firebase/firestore";
+import type { DocumentData, QueryDocumentSnapshot, SnapshotOptions } from "firebase/firestore";
 
-export const firestoreRoomConverter = {
-  toFirestore: (room: Room) => room,
-  fromFirestore: (snapshot: QueryDocumentSnapshot<Room>) => snapshot.data()
-} as const;
-
-export const firestoreAuthUserConverter = {
-  toFirestore: (user: AuthUser) => user,
-  fromFirestore: (snapshot: QueryDocumentSnapshot<AuthUser>) => snapshot.data()
+interface Converter<T> {
+  toFirestore: (value: T) => DocumentData;
+  fromFirestore: (snapshot: QueryDocumentSnapshot<T>, options?: SnapshotOptions) => T;
 }
 
+const createConverter = <T>(converter?: Partial<Converter<T>>): Converter<T> => ({
+  toFirestore: converter?.toFirestore ?? ((value: T) => value as DocumentData),
+  fromFirestore: converter?.fromFirestore ?? ((snapshot: QueryDocumentSnapshot<T>) => snapshot.data() as T)
+})
 
-export const firestoreUserConverter = {
-  toFirestore: (user: User) => user,
-  fromFirestore: (snapshot: QueryDocumentSnapshot<User>) => snapshot.data()
-}
+export const firestoreRoomConverter = createConverter<Room>();
+export const firestoreAuthUserConverter = createConverter<AuthUser>();
+export const firestoreUserConverter = createConverter<User>();
 
-export const firestoreQuestionConverter = {
-  toFirestore: (question: Question) => ({
+export const firestoreQuestionConverter = createConverter<Question>({
+  toFirestore: (question) => ({
     isRemoved: question.isRemoved,
     question: question.question,
     answer: question.answer
   }),
-  fromFirestore: (snapshot: QueryDocumentSnapshot<Omit<Question, "id">>) => ({
-    id: snapshot.id,
-    ...snapshot.data()
+  fromFirestore: (snapshot) => ({    
+    ...snapshot.data(),
+    id: snapshot.id
   })
-}
+});
