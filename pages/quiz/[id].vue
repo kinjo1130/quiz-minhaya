@@ -70,6 +70,12 @@ onMounted(async () => {
     }
     // activeQuestionが変更されたら次の問題に行く
     if (room.activeQuestion !== quizId) {
+      if(room.activeQuestion === ""){
+        const router = useRouter();
+        console.log("activeQuestionが空なので、結果画面に行く");
+        router.push(`/result`);
+        return;
+      }
       const router = useRouter();
       console.log("activeQuestionが変更されたので、次の問題に行く");
       router.push(`/quiz/${room.activeQuestion}`);
@@ -140,7 +146,7 @@ const judgeAnswer = async () => {
     const nextQuizId = quizListId.filter(
       (id) => !filterAlreadyAnsweredQuiz.includes(id)
     );
-    if (nextQuizId) {
+    if (nextQuizId && nextQuizId.length > 0) {
       console.log("nextQuiz", nextQuizId);
       const router = useRouter();
       const randomNum = Math.floor(Math.random() * nextQuizId.length);
@@ -152,7 +158,13 @@ const judgeAnswer = async () => {
       router.push(`/quiz/${nextQuizId[randomNum]}`);
     }
     else{
+      await updateDoc(roomRef, {
+        activeQuestion: "",
+        respondents: [],
+      });
       console.log("すべての問題を回答しました");
+      const router = useRouter();
+      router.push(`/result`);
     }
   } else {
     console.log("不正解");
