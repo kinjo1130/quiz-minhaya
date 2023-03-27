@@ -6,8 +6,8 @@
   </button>
   <p>回答者: {{ respondent.name }}</p>
   <p>回答者uid:{{ respondent.uid }}</p>
-  <p>ログインしているゆーざーのuid:{{ loginUser.uid }}</p>
-  <form v-if="respondent.uid === loginUser.uid" @submit.prevent="judgeAnswer">
+  <p>ログインしているゆーざーのuid:{{ user?.uid }}</p>
+  <form v-if="respondent.uid === user?.uid" @submit.prevent="judgeAnswer">
     <label>解答欄</label>
     <input type="text" v-model="answerValue" />
     <button>回答する</button>
@@ -16,6 +16,11 @@
 <script setup lang="ts">
 import { arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import type { User, Question } from "~/types";
+
+definePageMeta({
+  middleware: "auth"
+})
+
 const currentQuiz = ref<Question>({
   id: "",
   isRemoved: false,
@@ -27,15 +32,13 @@ const respondent = ref<User>({
   name: "",
   uid: "",
 });
-const loginUser = ref<User>({
-  name: "",
-  uid: "",
-});
 
 const answerValue = ref("");
 
 const roomId = localStorage.getItem("roomId")!;
 const { room, roomRef } = useRoom(roomId)
+
+const { user } = useAuth();
 
 onMounted(async () => {
   await useNuxtApp().$getQuestions();
@@ -50,11 +53,7 @@ onMounted(async () => {
     return;
   }
   console.log("quiz", quiz);
-  const user = await useNuxtApp().$existCurrentUser();
-  loginUser.value = {
-    name: user?.name || "",
-    uid: user?.uid || "",
-  };
+  
   currentQuiz.value = quiz;
   console.log("getQuiz", quiz);
   console.log("====================================");
@@ -97,11 +96,10 @@ onMounted(async () => {
 // クイズに回答する
 const answeredQuiz = async () => {
   console.log("answeredQuiz");
-  const user = (await useNuxtApp().$existCurrentUser())!;
 
-  console.log("回答者の名前を保存する", user?.name);
+  console.log("回答者の名前を保存する", user.value!.name);
   await updateDoc(roomRef.value, {
-    respondents: arrayUnion(user.uid),
+    respondents: arrayUnion(user.value!.uid),
   })
 };
 

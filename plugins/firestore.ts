@@ -8,9 +8,10 @@ import {
   getDocs,
   updateDoc,
 } from "firebase/firestore";
+import { User } from "~/types";
 export default defineNuxtPlugin(() => ({
   provide: {
-    async createRoom(uid: string, name: string) {
+    async createRoom(user: User) {
       console.log("createRoom");
       const { $firestore } = useNuxtApp();
       const roomsRef = collection($firestore, "rooms").withConverter(firestoreRoomConverter);
@@ -19,18 +20,13 @@ export default defineNuxtPlugin(() => ({
         answeredQuestions: [],
         respondents: [],
         respondentLimit: 1,
-        users: [
-          {
-            uid: uid,
-            name: name,
-          },
-        ],
+        users: [user],
         isQuizStarted: false,
       });
       console.log("Document written with ID: ", docRef.id);
       return docRef.id;
     },
-    async joinRoom(uid: string, name: string, roomId: string) {
+    async joinRoom(user: User, roomId: string) {
       const { $firestore } = useNuxtApp();
       const querySnapshot = await getDocs(collection($firestore, "rooms").withConverter(firestoreRoomConverter));
       const isRoomExist = querySnapshot.docs.some((doc) => doc.id === roomId);
@@ -43,10 +39,7 @@ export default defineNuxtPlugin(() => ({
       console.log("joinRoom");
       const roomRef = doc($firestore, "rooms", roomId).withConverter(firestoreRoomConverter);
       await updateDoc(roomRef, {
-        users: arrayUnion({
-          uid: uid,
-          name: name,
-        }),
+        users: arrayUnion(user),
       });
       return roomId;
     },

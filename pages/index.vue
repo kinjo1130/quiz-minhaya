@@ -8,36 +8,29 @@
   </form>
 </template>
 <script lang="ts" setup>
+definePageMeta({
+  middleware: "auth"
+})
+
 const router = useRouter();
 // リアルタイムにログインしているユーザーの情報を取得する
-onMounted(async () => {
-  const user = await useNuxtApp().$existCurrentUser();
-  if (!user) {
-    router.push("/login");
-  }
-});
 
 const invitedCode = ref("");
+
 // クイズをする部屋を作成する
 const createRoom = async () => {
   console.log("createRoom");
-  const { loginUser } = await useAuth();
-  console.log("現在ログインしているユーザーの情報", await loginUser.value?.uid);
-  const createdRoomId = await useNuxtApp().$createRoom(
-    loginUser.value?.uid as string,
-    loginUser.value?.name as string
-  );
+  const { user } = useAuth();
+  console.log("現在ログインしているユーザーの情報", user.value!.uid);
+  const createdRoomId = await useNuxtApp().$createRoom(user.value!);
   router.push(`/room/${createdRoomId}`);
 };
+
 const joinRoom = async () => {
   console.log("joinRoom");
-  const { loginUser } = await useAuth();
-  console.log("現在ログインしているユーザーの情報", await loginUser.value?.uid);
-  const joinedRoomId = await useNuxtApp().$joinRoom(
-    loginUser.value?.uid as string,
-    loginUser.value?.name as string,
-    invitedCode.value
-  );
+  const { user } = useAuth();
+  console.log("現在ログインしているユーザーの情報", user.value?.uid);
+  const joinedRoomId = await useNuxtApp().$joinRoom(user.value!, invitedCode.value);
   router.push(`/room/${joinedRoomId}`);
 };
 </script>

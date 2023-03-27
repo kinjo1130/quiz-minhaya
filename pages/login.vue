@@ -4,7 +4,7 @@
 <script setup lang="ts">
 const login = () => {
   const router = useRouter();
-  const { signIn } = useAuth();
+  
   signIn()
     .then(() => {
       console.log("ログイン成功");

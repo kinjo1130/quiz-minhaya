@@ -42,6 +42,10 @@ import {
 
 import type { User, QuizList, QuizType, Question } from "~/types";
 
+definePageMeta({
+  middleware: "auth"
+})
+
 const router = useRouter();
 // ルームに参加しているユーザーの情報
 const usersInRoom = ref<User[]>([]);
