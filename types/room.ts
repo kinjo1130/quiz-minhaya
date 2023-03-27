@@ -1,8 +1,8 @@
 import type { User } from '.'
 
 export interface Room {
-  activeQuestion: string;
-  answeredQuestions: string[];
+  currentQuestionIndex: number;
+  questionsIds: string[];
   isQuizStarted: boolean;
   respondents: string[];
   respondentLimit: number;

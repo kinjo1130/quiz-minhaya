@@ -41,7 +41,12 @@ import {
   doc,
   getDocs,
   onSnapshot,
-  updateDoc
+  updateDoc,
+  query,
+  limit,
+  where,
+  arrayUnion,
+  getDoc
 } from 'firebase/firestore'
 
 import type { User, QuizList, QuizType, Question } from '~/types'
@@ -77,46 +82,64 @@ onMounted(() => {
     }
     usersInRoom.value = room.users
     // ここで、他のブラウザとfirestoreが同期している
-    if (room.isQuizStarted === true && room.activeQuestion) {
-      // todo: ここで無限ループ的なことが起きてるので修正
-      router.push(`/quiz/${room.activeQuestion}`)
-    }
+    // if (room.isQuizStarted === true && room.currentQuestionIndex) {
+    //   // todo: ここで無限ループ的なことが起きてるので修正
+    //   router.push(`/quiz/${room.currentQuestionIndex}`)
+    // }
   })
 })
 
 // TODO:クイズをスタートしたら異なるブラウザ間でリアルタイムにクイズの情報を取得する
 const startQuiz = async () => {
   console.log('startQuiz')
-  const { $firestore } = useNuxtApp()
-  const { quizList, setQuizList } = useQuizList()
-  // スタートさせるときに、クイズの情報を取得してくる
-  const quizRef = collection(
-    $firestore,
-    'quiz',
-    // ここで、クイズの種類を指定する
-    '金城クイズ',
-    'questions'
-  ).withConverter(firestoreQuestionConverter)
-  const quizSnapshot = await getDocs(quizRef)
-  console.log('quizSnapshot', quizSnapshot.docs)
-  const quizData: Question[] = quizSnapshot.docs
-    .filter(doc => !doc.data().isRemoved)
-    .map(doc => doc.data())
-  console.log(quizData)
-  // composablesにクイズの情報を保存する
-  setQuizList(quizData)
-  // ランダムな数字生成(クイズの問題数を超えないようにする)
-  const randomNum = Math.floor(Math.random() * quizCount.value)
-
+  const { room } = useRoom(roomId)
+  await getQuestionIds()
   // 今出題されているクイズのidを保存する
   await updateDoc(roomRef.value, {
     isQuizStarted: true,
-    activeQuestion: quizData[randomNum].id
+    currentQuestionIndex: 1
   })
-
-  // 取得したきたクイズのidから、クイズの個別画面に飛ばす
-  router.push(`/quiz/${quizData[randomNum].id}`)
+  if (!room.value) {
+    // ルームがなかった時の処理
+    return
+  }
+  const nextQuestionIndex = room.value?.currentQuestionIndex
+  router.push(`/quiz/${nextQuestionIndex}`)
 }
+// クイズをスタートする前に、クイズの情報を取得する
+const getQuestionIds = async () => {
+  const { $firestore } = useNuxtApp()
+  const { setQuizList } = useQuizList()
+  const quizRef = collection(
+    $firestore,
+    'quiz',
+    '金城クイズ',
+    'questions'
+  ).withConverter(firestoreQuestionConverter)
+  // ドキュメントから二問だけ取得する
+  const q = query(quizRef, where('isRemoved', '==', false), limit(2))
+  const quizSnapshot = await getDocs(q)
+  const quizData = quizSnapshot.docs.map(doc => doc.data())
+  setQuizList(quizData)
+  const filterQuestionIds = quizData.map(quiz => quiz.id)
+  console.log({ filterQuestionIds })
+  // questionIdsにクイズのidを保存する
+  await updateDoc(roomRef.value, {
+    questionsIds: arrayUnion(...filterQuestionIds)
+  })
+  // 保存したquestionsIdsを取得して、quizListに保存する
+  const roomSnapshot = await getDoc(roomRef.value)
+  const roomData = roomSnapshot.data()
+  console.log({ roomData })
+  const questionIds = roomData?.questionsIds
+  console.log({ questionIds })
+  const filterQuizData = quizData.filter((quiz) => {
+    return questionIds?.includes(quiz.id)
+  })
+  setQuizList(filterQuizData)
+  console.log({ filterQuizData })
+}
+
 // 自作問題リストを取得する
 // const getOriginalQuizList = async () => {
 //   if (quizType.value !== "MyCreateQuiz") return;

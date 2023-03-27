@@ -6,7 +6,10 @@ import {
   doc,
   getDoc,
   getDocs,
-  updateDoc
+  limit,
+  query,
+  updateDoc,
+  where
 } from 'firebase/firestore'
 import { User } from '~/types'
 export default defineNuxtPlugin(() => ({
@@ -14,10 +17,12 @@ export default defineNuxtPlugin(() => ({
     async createRoom (user: User) {
       console.log('createRoom')
       const { $firestore } = useNuxtApp()
-      const roomsRef = collection($firestore, 'rooms').withConverter(firestoreRoomConverter)
+      const roomsRef = collection($firestore, 'rooms').withConverter(
+        firestoreRoomConverter
+      )
       const docRef = await addDoc(roomsRef, {
-        activeQuestion: '',
-        answeredQuestions: [],
+        currentQuestionIndex: 0,
+        questionsIds: [],
         respondents: [],
         respondentLimit: 1,
         users: [user],
@@ -28,7 +33,9 @@ export default defineNuxtPlugin(() => ({
     },
     async joinRoom (user: User, roomId: string) {
       const { $firestore } = useNuxtApp()
-      const querySnapshot = await getDocs(collection($firestore, 'rooms').withConverter(firestoreRoomConverter))
+      const querySnapshot = await getDocs(
+        collection($firestore, 'rooms').withConverter(firestoreRoomConverter)
+      )
       const isRoomExist = querySnapshot.docs.some(doc => doc.id === roomId)
 
       if (!isRoomExist) {
@@ -37,7 +44,9 @@ export default defineNuxtPlugin(() => ({
       }
 
       console.log('joinRoom')
-      const roomRef = doc($firestore, 'rooms', roomId).withConverter(firestoreRoomConverter)
+      const roomRef = doc($firestore, 'rooms', roomId).withConverter(
+        firestoreRoomConverter
+      )
       await updateDoc(roomRef, {
         users: arrayUnion(user)
       })
@@ -50,25 +59,39 @@ export default defineNuxtPlugin(() => ({
         console.log('ルームが存在しません')
         return
       }
-      const querySnapshot = await getDoc(doc($firestore, 'rooms', roomId).withConverter(firestoreRoomConverter))
+      const querySnapshot = await getDoc(
+        doc($firestore, 'rooms', roomId).withConverter(firestoreRoomConverter)
+      )
       console.log('ルーム情報を取得', querySnapshot.data())
       return querySnapshot.data()
     },
     async getQuestions () {
       const { $firestore } = useNuxtApp()
       const { setQuizList } = useQuizList()
-      console.log('aaa')
-      const roomInfo = await useNuxtApp().$getRoomInfo()
-      const querySnapshot = await getDocs(
-        collection($firestore, 'quiz', '金城クイズ', 'questions').withConverter(firestoreQuestionConverter)
-      )
-      console.log('取得', querySnapshot.docs)
-      console.log('ccc')
-      const quizData = querySnapshot.docs
-        .filter(doc => doc.data().isRemoved === false)
-        .map(doc => doc.data())
-      console.log('クイズデータを取得', quizData)
-      setQuizList(quizData)
+      const roomId = localStorage.getItem('roomId') || ''
+      const { roomRef } = useRoom(roomId)
+      if (!roomId) {
+        console.log('ルームが存在しません')
+        return
+      }
+      const quizRef = collection(
+        $firestore,
+        'quiz',
+        '金城クイズ',
+        'questions'
+      ).withConverter(firestoreQuestionConverter)
+      const q = query(quizRef, where('isRemoved', '==', false))
+      const quizSnapshot = await getDocs(q)
+      const quizData = quizSnapshot.docs.map(doc => doc.data())
+      const roomSnapshot = await getDoc(roomRef.value)
+      const roomData = roomSnapshot.data()
+      console.log({ roomData })
+      const questionIds = roomData?.questionsIds
+      console.log({ questionIds })
+      const filterQuizData = quizData.filter((quiz) => {
+        return questionIds?.includes(quiz.id)
+      })
+      setQuizList(filterQuizData)
     }
   }
 }))
