@@ -32,7 +32,7 @@ export default defineNuxtPlugin(() => {
     provide: {
       firebaseApp: firebase,
       messaging,
-      firebaseDB: db,
+      firestore: db,
       functions,
     },
   };

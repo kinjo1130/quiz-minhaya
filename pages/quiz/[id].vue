@@ -4,10 +4,10 @@
   <button type="button" @click="answeredQuiz" :disabled="answeredQuizFlag">
     わかった！！
   </button>
-  <p>回答者: {{ answerPerson.name }}</p>
-  <p>回答者uid:{{ answerPerson.uid }}</p>
+  <p>回答者: {{ respondent.name }}</p>
+  <p>回答者uid:{{ respondent.uid }}</p>
   <p>ログインしているゆーざーのuid:{{ loginUser.uid }}</p>
-  <form v-if="answerPerson.uid === loginUser.uid" @submit.prevent="judgeAnswer">
+  <form v-if="respondent.uid === loginUser.uid" @submit.prevent="judgeAnswer">
     <label>解答欄</label>
     <input type="text" v-model="answerValue" />
     <button>回答する</button>
@@ -15,7 +15,6 @@
 </template>
 <script setup lang="ts">
 import { arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { e } from "ofetch/dist/error-04138797";
 import type { User, Question } from "~/types";
 const currentQuiz = ref<Question>({
   id: "",
@@ -24,7 +23,7 @@ const currentQuiz = ref<Question>({
   answer: "",
 });
 const answeredQuizFlag = ref(false);
-const answerPerson = ref<User>({
+const respondent = ref<User>({
   name: "",
   uid: "",
 });
@@ -34,6 +33,10 @@ const loginUser = ref<User>({
 });
 
 const answerValue = ref("");
+
+const roomId = localStorage.getItem("roomId")!;
+const { room, roomRef } = useRoom(roomId)
+
 onMounted(async () => {
   await useNuxtApp().$getQuestions();
   console.log("====================================");
@@ -55,14 +58,10 @@ onMounted(async () => {
   currentQuiz.value = quiz;
   console.log("getQuiz", quiz);
   console.log("====================================");
-  const { $firebaseDB } = useNuxtApp();
-  const roomId = localStorage.getItem("roomId")!;
+  
   console.log("roomId", roomId);
-  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(
-    firestoreRoomConverter
-  );
-  onSnapshot(roomRef, (doc) => {
-    const room = doc.data();
+  
+  watch(room, (room) => {
     console.log("Current data: ", room);
     if (!room) {
       // TODO: returnする前に適当な場所にリダイレクトすべき
@@ -87,30 +86,23 @@ onMounted(async () => {
 
       console.log("usersInRoom", room.users);
       // todo: ここの処理が少し重いので、改善したい
-      answerPerson.value = room.users.find(
-        (user) => user.uid === room.respondents[0].uid
+      respondent.value = room.users.find(
+        (user) => user.uid === room!.respondents[0]
       )!;
 
-      console.log("answerPerson", answerPerson.value);
+      console.log("answerPerson", respondent.value);
     }
-  });
+  }, { immediate: true });
 });
 // クイズに回答する
 const answeredQuiz = async () => {
   console.log("answeredQuiz");
-  const user = await useNuxtApp().$existCurrentUser();
-  const { $firebaseDB } = useNuxtApp();
-  const roomId = localStorage.getItem("roomId")!;
-  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(
-    firestoreRoomConverter
-  );
+  const user = (await useNuxtApp().$existCurrentUser())!;
+
   console.log("回答者の名前を保存する", user?.name);
-  await updateDoc(roomRef, {
-    respondents: arrayUnion({
-      uid: user?.uid,
-      name: user?.name,
-    }),
-  });
+  await updateDoc(roomRef.value, {
+    respondents: arrayUnion(user.uid),
+  })
 };
 
 const judgeAnswer = async () => {
@@ -118,12 +110,8 @@ const judgeAnswer = async () => {
   if (!answerValue) return;
   if (answerValue.value === currentQuiz.value.answer) {
     console.log("正解");
-    const roomId = localStorage.getItem("roomId")!;
-    const { $firebaseDB } = useNuxtApp();
-    const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(
-      firestoreRoomConverter
-    );
-    await updateDoc(roomRef, {
+
+    await updateDoc(roomRef.value, {
       answeredQuestions: arrayUnion(currentQuiz.value?.id),
     });
     // 次の問題に行く
@@ -151,14 +139,13 @@ const judgeAnswer = async () => {
       const router = useRouter();
       const randomNum = Math.floor(Math.random() * nextQuizId.length);
       // 次の問題に行く前に、回答者を初期化する
-      await updateDoc(roomRef, {
+      await updateDoc(roomRef.value, {
         activeQuestion: nextQuizId[randomNum],
         respondents: [],
       });
       router.push(`/quiz/${nextQuizId[randomNum]}`);
-    }
-    else{
-      await updateDoc(roomRef, {
+    } else {
+      await updateDoc(roomRef.value, {
         activeQuestion: "",
         respondents: [],
       });

@@ -1,9 +1,9 @@
 <template></template>
 <script setup lang="ts">
 import { doc, onSnapshot } from "firebase/firestore";
-const { $firebaseDB } = useNuxtApp();
+const { $firestore } = useNuxtApp();
 const roomId = useRoute().params.id as string;
-const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
+const roomRef = doc($firestore, "rooms", roomId).withConverter(firestoreRoomConverter);
 const router = useRouter();
 
 onSnapshot(roomRef, (doc) => {

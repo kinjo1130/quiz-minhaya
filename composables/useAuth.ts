@@ -15,7 +15,7 @@ export const useAuth = () => {
     return await new Promise<void>((resolve, reject) => {
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
-      const { $firebaseDB } = useNuxtApp();
+      const { $firestore } = useNuxtApp();
 
       return signInWithPopup(auth, provider)
         .then((userCredential) => {
@@ -29,7 +29,7 @@ export const useAuth = () => {
               };
               // 認証したらfirestoreにユーザー情報を保存する
               const userRef = doc(
-                $firebaseDB,
+                $firestore,
                 "users",
                 loginUser.value.uid
               ).withConverter(firestoreAuthUserConverter);

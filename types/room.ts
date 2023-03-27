@@ -4,7 +4,7 @@ export interface Room {
   activeQuestion: string;
   answeredQuestions: string[];
   isQuizStarted: boolean;
-  respondents: User[];
+  respondents: string[];
   respondentLimit: number;  
   users: User[];
 }

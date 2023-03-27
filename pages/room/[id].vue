@@ -54,14 +54,14 @@ const originalQuizList = ref<QuizList[]>([]);
 // 自作問題の中で選択した問題の種類
 const selectedQuiz = ref("random");
 
+const roomId = useRoute().params.id as string;
+const { room, roomRef } = useRoom(roomId);
+
 onMounted(async () => {
-  const { $firebaseDB } = useNuxtApp();
-  const roomId = useRoute().params.id as string;
   // localStorageにroomIdを保存する
   localStorage.setItem("roomId", roomId);
-  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
-  onSnapshot(roomRef, async (doc) => {
-    const room = doc.data();
+  
+  watch(room, (room) => {
     console.log("Current data: ", room);
     if(!room) {
       // TODO: returnする前に適当な場所にリダイレクトすべき
@@ -75,16 +75,15 @@ onMounted(async () => {
     }
   });
 });
+
 // TODO:クイズをスタートしたら異なるブラウザ間でリアルタイムにクイズの情報を取得する
 const startQuiz = async () => {
   console.log("startQuiz");
-  const { $firebaseDB } = useNuxtApp();
+  const { $firestore } = useNuxtApp();
   const { quizList, setQuizList } = useQuizList();
-  const roomId = useRoute().params.id as string;
-  const roomRef = doc($firebaseDB, "rooms", roomId).withConverter(firestoreRoomConverter);
   // スタートさせるときに、クイズの情報を取得してくる
   const quizRef = collection(
-    $firebaseDB,
+    $firestore,
     "quiz",
     // ここで、クイズの種類を指定する
     "金城クイズ",
@@ -100,19 +99,21 @@ const startQuiz = async () => {
   setQuizList(quizData);
   // ランダムな数字生成(クイズの問題数を超えないようにする)
   const randomNum = Math.floor(Math.random() * quizCount.value);
-  // 取得したきたクイズのidから、クイズの個別画面に飛ばす
-  router.push(`/quiz/${quizData[randomNum].id}`);
-  // 今出題されているクイズのidを保存する
-  await updateDoc(roomRef, {
+  
+  // 今出題されているクイズのidを保存する  
+  await updateDoc(roomRef.value, {
     isQuizStarted: true,
     activeQuestion: quizData[randomNum].id,
   });
+
+  // 取得したきたクイズのidから、クイズの個別画面に飛ばす
+  router.push(`/quiz/${quizData[randomNum].id}`);
 };
 // 自作問題リストを取得する
 // const getOriginalQuizList = async () => {
 //   if (quizType.value !== "MyCreateQuiz") return;
-//   const { $firebaseDB } = useNuxtApp();
-//   const quizRef = collection($firebaseDB, "quiz");
+//   const { $firestore } = useNuxtApp();
+//   const quizRef = collection($firestore, "quiz");
 //   const quizSnapshot = await getDocs(quizRef);
 //   const quizData = quizSnapshot.docs.map((doc) => doc.data());
 //   console.log(quizData);
