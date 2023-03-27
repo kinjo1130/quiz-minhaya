@@ -1,12 +1,12 @@
-import type { Question } from "~/types";
+import type { Question } from '~/types'
 
 export const useQuizList = () => {
-  const quizList = useState<Question[]>("quizList", () => []);
+  const quizList = useState<Question[]>('quizList', () => [])
   const setQuizList = (setQuizList: Question[]) => {
-    quizList.value = setQuizList;
-  };
+    quizList.value = setQuizList
+  }
   return {
     quizList,
-    setQuizList,
-  };
-};
+    setQuizList
+  }
+}

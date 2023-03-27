@@ -1,9 +1,11 @@
 <template>
-    <h1>終わり</h1>
-    <NuxtLink type="button" :to="'/'">トップに戻る</NuxtLink>
+  <h1>終わり</h1>
+  <NuxtLink type="button" :to="'/'">
+    トップに戻る
+  </NuxtLink>
 </template>
 <script setup lang="ts">
-onMounted(async () => {
-  localStorage.removeItem("roomId");
-});
+onMounted(() => {
+  localStorage.removeItem('roomId')
+})
 </script>

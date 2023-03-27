@@ -1,10 +1,10 @@
-import type { User } from ".";
+import type { User } from '.'
 
 export interface Room {
   activeQuestion: string;
   answeredQuestions: string[];
   isQuizStarted: boolean;
   respondents: string[];
-  respondentLimit: number;  
+  respondentLimit: number;
   users: User[];
 }

@@ -1,4 +1,4 @@
-export type QuizType = "original" | "builtin";
+export type QuizType = 'original' | 'builtin';
 
 export type Question = {
   id: string;

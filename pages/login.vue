@@ -1,17 +1,19 @@
 <template>
-  <button type="button" @click="login">ログイン</button>
+  <button type="button" @click="login">
+    ログイン
+  </button>
 </template>
 <script setup lang="ts">
 const login = () => {
-  const router = useRouter();
-  
+  const router = useRouter()
+
   signIn()
     .then(() => {
-      console.log("ログイン成功");
-      router.push("/");
+      console.log('ログイン成功')
+      router.push('/')
     })
     .catch((error) => {
-      console.log("ログイン失敗", error);
-    });
-};
+      console.log('ログイン失敗', error)
+    })
+}
 </script>

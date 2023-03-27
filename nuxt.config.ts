@@ -2,50 +2,50 @@ export default defineNuxtConfig({
   ssr: false,
   components: {
     global: true,
-    dirs: ["~/components"],
+    dirs: ['~/components']
   },
   runtimeConfig: {
     public: {
-      apiKey: process.env[process.env.NODE_ENV + "_" + "apiKey"],
-      authDomain: process.env[process.env.NODE_ENV + "_" + "authDomain"],
-      projectId: process.env[process.env.NODE_ENV + "_" + "projectId"],
-      storageBucket: process.env[process.env.NODE_ENV + "_" + "storageBucket"],
-      databaseURL: process.env[process.env.NODE_ENV + "_" + "databaseURL"],
+      apiKey: process.env[process.env.NODE_ENV + '_' + 'apiKey'],
+      authDomain: process.env[process.env.NODE_ENV + '_' + 'authDomain'],
+      projectId: process.env[process.env.NODE_ENV + '_' + 'projectId'],
+      storageBucket: process.env[process.env.NODE_ENV + '_' + 'storageBucket'],
+      databaseURL: process.env[process.env.NODE_ENV + '_' + 'databaseURL'],
       messagingSenderId:
-        process.env[process.env.NODE_ENV + "_" + "messagingSenderId"],
-      appId: process.env[process.env.NODE_ENV + "_" + "appId"],
-      vapidKey: process.env[process.env.NODE_ENV + "_" + "vapidKey"],
-      serverKey: process.env[process.env.NODE_ENV + "_" + "serverKey"],
-    },
+        process.env[process.env.NODE_ENV + '_' + 'messagingSenderId'],
+      appId: process.env[process.env.NODE_ENV + '_' + 'appId'],
+      vapidKey: process.env[process.env.NODE_ENV + '_' + 'vapidKey'],
+      serverKey: process.env[process.env.NODE_ENV + '_' + 'serverKey']
+    }
   },
   postcss: {
     plugins: {
       tailwindcss: {},
-      autoprefixer: {},
-    },
+      autoprefixer: {}
+    }
   },
   vite: {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@import "@/assets/css/_variables.scss"; ',
-        },
-      },
+          additionalData: '@import "@/assets/css/_variables.scss"; '
+        }
+      }
     },
     esbuild: {
-      pure: ["console.log", "console.info"],
-    },
+      pure: ['console.log', 'console.info']
+    }
   },
   nitro: {
-    preset: "firebase",
+    preset: 'firebase',
     esbuild: {
       options: {
-        target: "esnext",
-      },
+        target: 'esnext'
+      }
     },
     prerender: {
-      routes: ["/"],
-    },
+      routes: ['/']
+    }
   },
-  modules: ["@vueuse/nuxt"],
-});
+  modules: ['@vueuse/nuxt']
+})
