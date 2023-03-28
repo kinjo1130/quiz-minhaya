@@ -7,4 +7,5 @@ export interface Room {
   respondents: string[];
   respondentLimit: number;
   users: User[];
+  isFinished: boolean;
 }

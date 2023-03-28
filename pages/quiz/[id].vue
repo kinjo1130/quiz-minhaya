@@ -69,7 +69,7 @@ onMounted(async () => {
     }
     // activeQuestionが変更されたら次の問題に行く
     if (room.currentQuestionIndex.toString() !== quizId) {
-      if (room.currentQuestionIndex.toString() === '') {
+      if (room.isFinished) {
         const router = useRouter()
         console.log('activeQuestionが空なので、結果画面に行く')
         router.push('/result')
@@ -106,7 +106,10 @@ const judgeAnswer = async () => {
   if (answerValue.value === currentQuiz.value.answer) {
     console.log('正解')
     // 残りの問題数がある場合は、次の問題に行く
-    if (room.value!.currentQuestionIndex < room.value!.questionsIds.length) {
+    if (
+      room.value!.currentQuestionIndex < room.value!.questionsIds.length &&
+      room.value!.currentQuestionIndex !== 0
+    ) {
       await updateDoc(roomRef.value, {
         currentQuestionIndex: room.value!.currentQuestionIndex + 1,
         respondents: []
@@ -114,6 +117,9 @@ const judgeAnswer = async () => {
       console.log('次の問題に行く')
     } else {
       console.log('すべての問題を回答しました')
+      await updateDoc(roomRef.value, {
+        isFinished: true
+      })
       const router = useRouter()
       router.push('/result')
     }

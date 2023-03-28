@@ -82,10 +82,10 @@ onMounted(() => {
     }
     usersInRoom.value = room.users
     // ここで、他のブラウザとfirestoreが同期している
-    // if (room.isQuizStarted === true && room.currentQuestionIndex) {
-    //   // todo: ここで無限ループ的なことが起きてるので修正
-    //   router.push(`/quiz/${room.currentQuestionIndex}`)
-    // }
+    if (room.isQuizStarted === true && room.currentQuestionIndex) {
+      // todo: ここで無限ループ的なことが起きてるので修正
+      router.push(`/quiz/${room.currentQuestionIndex}`)
+    }
   })
 })
 

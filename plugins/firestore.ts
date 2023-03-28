@@ -26,7 +26,8 @@ export default defineNuxtPlugin(() => ({
         respondents: [],
         respondentLimit: 1,
         users: [user],
-        isQuizStarted: false
+        isQuizStarted: false,
+        isFinished: false
       })
       console.log('Document written with ID: ', docRef.id)
       return docRef.id
