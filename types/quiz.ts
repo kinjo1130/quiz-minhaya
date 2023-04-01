@@ -8,7 +8,7 @@ export type Question = {
 };
 
 export type QuizList = {
+  id: string;
   title: string;
   description: string;
-  questions: Question[];
 }

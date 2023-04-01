@@ -1,12 +1,11 @@
 import { defineNuxtPlugin } from '#app'
 import {
   addDoc,
-  arrayUnion,
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
-  limit,
   query,
   updateDoc,
   where
@@ -22,7 +21,8 @@ export default defineNuxtPlugin(() => ({
       )
       const docRef = await addDoc(roomsRef, {
         currentQuestionIndex: 0,
-        questionsIds: [],
+        quizId: 'random',
+        questionIds: [],
         respondentLimit: 1,
         players: { [user.uid]: { ...user, isOwner: true, score: 0, state: 'neutral' } },
         state: 'waiting'
@@ -69,25 +69,16 @@ export default defineNuxtPlugin(() => ({
     async getQuestions () {
       const { $firestore } = useNuxtApp()
       const { setQuizList } = useQuizList()
-      const { roomRef } = useRoom()
-      const quizRef = collection(
+      const { room } = useRoom()
+      const quizRef = query(collection(
         $firestore,
         'quiz',
-        '金城クイズ',
+        room.value!.quizId,
         'questions'
-      ).withConverter(firestoreQuestionConverter)
-      const q = query(quizRef, where('isRemoved', '==', false))
-      const quizSnapshot = await getDocs(q)
+      ), where(documentId(), 'in', room.value!.questionIds)).withConverter(firestoreQuestionConverter)
+      const quizSnapshot = await getDocs(quizRef)
       const quizData = quizSnapshot.docs.map(doc => doc.data())
-      const roomSnapshot = await getDoc(roomRef.value)
-      const roomData = roomSnapshot.data()
-      console.log({ roomData })
-      const questionIds = roomData?.questionsIds
-      console.log({ questionIds })
-      const filterQuizData = quizData.filter((quiz) => {
-        return questionIds?.includes(quiz.id)
-      })
-      setQuizList(filterQuizData)
+      setQuizList(quizData)
     }
   }
 }))

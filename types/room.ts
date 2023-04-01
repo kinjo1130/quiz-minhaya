@@ -4,7 +4,8 @@ export type RoomState = 'waiting' | 'playing' | 'finished';
 
 export interface Room {
   currentQuestionIndex: number;
-  questionsIds: string[];
+  quizId: string,
+  questionIds: string[];
   respondentLimit: number;
   players: Record<string, QuizPlayer>;
   state: RoomState;

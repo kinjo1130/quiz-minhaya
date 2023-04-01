@@ -1,5 +1,5 @@
 import type { DocumentData, QueryDocumentSnapshot, SnapshotOptions } from 'firebase/firestore'
-import type { AuthUser, Question, Room, User } from '~/types'
+import type { AuthUser, Question, QuizList, Room, User } from '~/types'
 
 interface Converter<T> {
   toFirestore: (value: T) => DocumentData;
@@ -14,6 +14,17 @@ const createConverter = <T>(converter?: Partial<Converter<T>>): Converter<T> => 
 export const firestoreRoomConverter = createConverter<Room>()
 export const firestoreAuthUserConverter = createConverter<AuthUser>()
 export const firestoreUserConverter = createConverter<User>()
+
+export const firestoreQuizListConverter = createConverter<QuizList>({
+  toFirestore: quizList => ({
+    title: quizList.title,
+    description: quizList.description
+  }),
+  fromFirestore: snapshot => ({
+    ...snapshot.data(),
+    id: snapshot.id
+  })
+})
 
 export const firestoreQuestionConverter = createConverter<Question>({
   toFirestore: question => ({

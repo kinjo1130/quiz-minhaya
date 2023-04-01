@@ -5,7 +5,7 @@
     今は{{ room.currentQuestionIndex + 1 }}問目
   </p>
   <p v-if="room">
-    残り問題数:{{ room.questionsIds.length - room.currentQuestionIndex }}
+    残り問題数:{{ room.questionIds.length - room.currentQuestionIndex }}
   </p>
   <button type="button" :disabled="isUserRespondent || !canBeRespondent" @click="answeredQuiz">
     わかった！！
@@ -18,7 +18,7 @@
   </form>
 </template>
 <script setup lang="ts">
-import { arrayUnion, increment, updateDoc } from 'firebase/firestore'
+import { increment, updateDoc } from 'firebase/firestore'
 import type { Question, QuizPlayer } from '~/types'
 
 const currentQuiz = ref<Question>({
@@ -46,7 +46,8 @@ watch(room, async (room) => {
     return
   }
   // questionsIdsから取得してくる
-  const quizId = room.questionsIds[room.currentQuestionIndex]
+  const quizId = room.questionIds[room.currentQuestionIndex]
+  console.warn(quizList.value)
   const quiz = quizList.value.find(quiz => quiz.id === quizId)
 
   if (!quiz) {
