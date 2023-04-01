@@ -23,11 +23,9 @@ export default defineNuxtPlugin(() => ({
       const docRef = await addDoc(roomsRef, {
         currentQuestionIndex: 0,
         questionsIds: [],
-        respondents: [],
         respondentLimit: 1,
-        users: [user],
-        isQuizStarted: false,
-        isFinished: false
+        players: { [user.uid]: { ...user, isOwner: true, score: 0, state: 'neutral' } },
+        state: 'waiting'
       })
       console.log('Document written with ID: ', docRef.id)
       return docRef.id
@@ -45,11 +43,13 @@ export default defineNuxtPlugin(() => ({
       }
 
       console.log('joinRoom')
+
       const roomRef = doc($firestore, 'rooms', roomId).withConverter(
         firestoreRoomConverter
       )
+      // @ts-expect-error ドット表記の型が当たらない
       await updateDoc(roomRef, {
-        users: arrayUnion(user)
+        [`players.${user.uid}`]: { ...user, isOwner: false, score: 0, state: 'neutral' }
       })
       return roomId
     },
@@ -69,12 +69,7 @@ export default defineNuxtPlugin(() => ({
     async getQuestions () {
       const { $firestore } = useNuxtApp()
       const { setQuizList } = useQuizList()
-      const roomId = localStorage.getItem('roomId') || ''
-      const { roomRef } = useRoom(roomId)
-      if (!roomId) {
-        console.log('ルームが存在しません')
-        return
-      }
+      const { roomRef } = useRoom()
       const quizRef = collection(
         $firestore,
         'quiz',

@@ -2,7 +2,10 @@ export default defineNuxtConfig({
   ssr: false,
   components: {
     global: true,
-    dirs: ['~/components']
+    dirs: [
+      '~/components',
+      { path: '~/fragments', prefix: 'Fragment' }
+    ]
   },
   runtimeConfig: {
     public: {

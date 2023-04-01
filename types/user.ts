@@ -6,3 +6,9 @@ export interface User {
 export interface AuthUser extends User {
   token: string;
 }
+
+export interface QuizPlayer extends User {
+  isOwner: boolean;
+  score: number;
+  state: 'neutral' | 'respondent' | 'correct' | 'incorrect';
+}
