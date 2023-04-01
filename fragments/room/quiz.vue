@@ -10,11 +10,7 @@
   <button type="button" :disabled="isUserRespondent || !canBeRespondent" @click="answeredQuiz">
     わかった！！
   </button>
-  <div v-for="respondent of respondents" :key="respondent.uid">
-    <p>回答者: {{ respondent.name }}</p>
-    <p>回答者uid:{{ respondent.uid }}</p>
-    <p>ログインしているゆーざーのuid:{{ user?.uid }}</p>
-  </div>
+  <QuizPlayerCard v-for="player of room?.players" :key="player.uid" :player="player" />
   <form v-if="isUserRespondent" @submit.prevent="judgeAnswer">
     <label>解答欄</label>
     <input v-model="answerValue" type="text">
@@ -66,7 +62,7 @@ watch(room, async (room) => {
 // immediateないと最初の問題が出てこない
 }, { immediate: true })
 
-watch(respondents, async (respondents) => {
+watch(respondents, (respondents) => {
   // 解答者が揃うまでは次に進まない
   // タイムアウト設定とかは別の場所でする
   if (canBeRespondent.value) { return }
@@ -74,14 +70,16 @@ watch(respondents, async (respondents) => {
   // すべての解答者の正誤が確定したら
   if (respondents.every(respondent => respondent.state.includes('correct'))) {
     console.log('update')
-    await updateDoc(roomRef.value, {
-      currentQuestionIndex: room.value!.currentQuestionIndex + 1,
-      players: Object.fromEntries(
-        Object.entries(room.value?.players ?? {})
-          .map(([uid, player]) => {
-            return [uid, { ...player, state: 'neutral' }] as [string, QuizPlayer]
-          }))
-    })
+    setTimeout(async () => {
+      await updateDoc(roomRef.value, {
+        currentQuestionIndex: room.value!.currentQuestionIndex + 1,
+        players: Object.fromEntries(
+          Object.entries(room.value?.players ?? {})
+            .map(([uid, player]) => {
+              return [uid, { ...player, state: 'neutral' }] as [string, QuizPlayer]
+            }))
+      })
+    }, 3000)
   }
 })
 
