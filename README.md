@@ -12,3 +12,6 @@
 
 今ある`"dev"コマンド`を削除して、下記のコマンドを追加してください。
 ` "dev": "nuxt dev && firebase emulators:start --import=./firestoreData --export-on-exit=./firestoreData",`
+
+
+vscodeの`command+S`を押したらeslintの設定が走るようにする

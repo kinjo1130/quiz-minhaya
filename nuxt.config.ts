@@ -16,6 +16,7 @@ export default defineNuxtConfig({
       appId: process.env.APPID
     }
   },
+  css: ['~/assets/css/main.css'],
   postcss: {
     plugins: {
       tailwindcss: {},

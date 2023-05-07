@@ -1,5 +1,5 @@
 <template>
-  <h1 class="font-bold">
+  <h1 class="">
     みんはや自作
   </h1>
   <button type="button" @click="createRoom">
@@ -11,6 +11,9 @@
     <button type="submit">
       参加
     </button>
+    <Button type="button" button-type="normal">
+      ルームを作る
+    </Button>
   </form>
 </template>
 <script lang="ts" setup>
