@@ -22,10 +22,10 @@ export default defineNuxtPlugin(() => {
 
   if (process.env.NODE_ENV === 'development') {
     // 開発時はlocalhostを参照する
-    const functions = getFunctions(getApp())
-    connectFunctionsEmulator(functions, 'localhost', 5001)
-    connectFirestoreEmulator(db, 'localhost', 8080)
-    connectAuthEmulator(auth, 'http://localhost:9099')
+    // const functions = getFunctions(getApp())
+    // connectFunctionsEmulator(functions, 'localhost', 5001)
+    // connectFirestoreEmulator(db, 'localhost', 8080)
+    // connectAuthEmulator(auth, 'http://localhost:9099')
   }
 
   return {
