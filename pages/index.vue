@@ -11,7 +11,11 @@
     <button type="submit">
       参加
     </button>
-    <Button type="button" button-type="normal">
+    <Button
+      type="button"
+      button-type="normal"
+      @click="pushTest"
+    >
       ルームを作る
     </Button>
   </form>
@@ -21,6 +25,9 @@ definePageMeta({
   middleware: 'auth'
 })
 
+const pushTest = ()=>{
+  console.log("pushTest")
+}
 const router = useRouter()
 // リアルタイムにログインしているユーザーの情報を取得する
 
