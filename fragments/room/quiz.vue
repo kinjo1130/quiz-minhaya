@@ -7,14 +7,14 @@
   <p v-if="room">
     残り問題数:{{ room.questionIds.length - room.currentQuestionIndex }}
   </p>
-  <button type="button" :disabled="isUserRespondent || !canBeRespondent" @click="answeredQuiz">
+  <Button type="button" button-type="normal" :disabled="isUserRespondent || !canBeRespondent" @click="answeredQuiz">
     わかった！！
-  </button>
+  </Button>
   <QuizPlayerCard v-for="player of room?.players" :key="player.uid" :player="player" />
   <form v-if="isUserRespondent" @submit.prevent="judgeAnswer">
     <label>解答欄</label>
     <input v-model="answerValue" type="text">
-    <button>回答する</button>
+    <Button type="submit" button-type="normal">回答する</Button>
   </form>
 </template>
 <script setup lang="ts">

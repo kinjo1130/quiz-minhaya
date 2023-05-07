@@ -15,16 +15,16 @@
     から
     <input v-model.number="quizCount" type="number" min="1" :max="selectedQuizListQuestions?.length">
     問
-    <button type="button" @click="startQuiz">
+    <Button type="button" button-type="normal" @click="startQuiz">
       クイズをスタートする
-    </button>
+    </Button>
   </div>
   <pre>
     {{ selectedQuizListQuestions }}
   </pre>
-  <button type="button" @click="publishInviteCode">
+  <Button type="button" button-type="normal" @click="publishInviteCode">
     招待コード発行
-  </button>
+  </Button>
   <p>招待コード:{{ invitationCode }}</p>
 </template>
 
