@@ -37,7 +37,7 @@ const { user } = useAuth()
         <!-- ログインしているときの -->
         <ul v-if="user" class="flex space-x-4 text-white text-sm font-medium">
           <li>
-            <a href="#">ホーム</a>
+            <a href="/home">ホーム</a>
           </li>
           <button type="button" @click="logout">
             ログアウト

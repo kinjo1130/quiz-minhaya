@@ -1,6 +1,6 @@
 <template>
   <h1>終わり</h1>
-  <NuxtLink type="button" :to="'/'">
+  <NuxtLink type="button" :to="'/home'">
     トップに戻る
   </NuxtLink>
 </template>

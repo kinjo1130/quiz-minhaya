@@ -1,4 +1,11 @@
 <script setup lang="ts">
+const { isAuthenticated } = useAuth()
+onMounted(() => {
+  if (isAuthenticated.value) {
+    // /homeにリダイレクト
+    return navigateTo('/home')
+  }
+})
 </script>
 <template>
   <div>

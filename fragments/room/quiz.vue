@@ -14,7 +14,9 @@
   <form v-if="isUserRespondent" @submit.prevent="judgeAnswer">
     <label>解答欄</label>
     <input v-model="answerValue" type="text">
-    <Button type="submit" button-type="normal">回答する</Button>
+    <Button type="submit" button-type="normal">
+      回答する
+    </Button>
   </form>
 </template>
 <script setup lang="ts">
@@ -46,10 +48,11 @@ watch(room, async (room) => {
     return
   }
   // questionsIdsから取得してくる
+  console.log('取得している問題のID', room.questionIds)
   const quizId = room.questionIds[room.currentQuestionIndex]
-  console.warn(quizList.value)
+  console.log(quizList.value)
   const quiz = quizList.value.find(quiz => quiz.id === quizId)
-
+  console.log('quiz', quiz)
   if (!quiz) {
     // クイズがないなら終わり
     await updateDoc(roomRef.value, {
