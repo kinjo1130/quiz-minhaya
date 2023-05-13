@@ -19,7 +19,7 @@ export const signIn = async () => {
   console.log('Document written with ID: ', docRef)
 }
 
-function signOut () {
+export const signOut = () => {
   const { $auth } = useNuxtApp()
   return firebaseSignOut($auth)
 }
