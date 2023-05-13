@@ -14,7 +14,6 @@ export default defineNuxtPlugin(() => {
     messagingSenderId: runtimeConfig.messagingSenderId,
     appId: runtimeConfig.appId
   }
-  console.log('config: ', config)
   const firebase = initializeApp(config)
   const messaging = getMessaging(firebase)
   const db = getFirestore(firebase)

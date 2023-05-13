@@ -7,19 +7,25 @@ import {
   getDoc,
   getDocs,
   query,
+  setDoc,
   updateDoc,
   where
 } from 'firebase/firestore'
 import { User } from '~/types'
 export default defineNuxtPlugin(() => ({
   provide: {
+    createRandomId () {
+      // 五桁のランダムな数字の文字列を返す
+      return Math.floor(Math.random() * 100000).toString().padStart(5)
+    },
     async createRoom (user: User) {
       console.log('createRoom')
       const { $firestore } = useNuxtApp()
-      const roomsRef = collection($firestore, 'rooms').withConverter(
+      const roomId = useNuxtApp().$createRandomId()
+      const roomsRef = doc($firestore, 'rooms', roomId).withConverter(
         firestoreRoomConverter
       )
-      const docRef = await addDoc(roomsRef, {
+      await setDoc(roomsRef, {
         currentQuestionIndex: 0,
         quizId: 'random',
         questionIds: [],
@@ -27,8 +33,8 @@ export default defineNuxtPlugin(() => ({
         players: { [user.uid]: { ...user, isOwner: true, score: 0, state: 'neutral' } },
         state: 'waiting'
       })
-      console.log('Document written with ID: ', docRef.id)
-      return docRef.id
+      console.log('Document written with ID: ', roomId)
+      return roomId
     },
     async joinRoom (user: User, roomId: string) {
       const { $firestore } = useNuxtApp()

@@ -25,9 +25,6 @@ definePageMeta({
   middleware: 'auth'
 })
 
-// const pushTest = ()=>{
-//   console.log("pushTest")
-// }
 const router = useRouter()
 // リアルタイムにログインしているユーザーの情報を取得する
 
