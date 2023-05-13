@@ -11,9 +11,9 @@
     わかった！！
   </Button>
   <QuizPlayerCard v-for="player of room?.players" :key="player.uid" :player="player" />
-  <form v-if="isUserRespondent" @submit.prevent="judgeAnswer">
-    <label>解答欄</label>
-    <input v-model="answerValue" type="text">
+  <form v-if="isUserRespondent" class="flex flex-col" @submit.prevent="judgeAnswer">
+    <label class="text-sm">解答欄</label>
+    <input v-model="answerValue" type="text" required placeholder="解答をどうぞ" class="border border-black p-3 rounded-lg mb-6">
     <Button type="submit" button-type="normal">
       回答する
     </Button>
@@ -100,6 +100,7 @@ const judgeAnswer = async () => {
   if (!answerValue) {
     return
   }
+  console.log('judgeAnswer', answerValue.value, currentQuiz.value.answer)
   if (answerValue.value === currentQuiz.value.answer) {
     console.log('正解')
 

@@ -12,7 +12,7 @@ const props = defineProps<{
 <template>
   <button
     :type="props.type"
-    class="rounded-md p-2 border bg-primary text-white"
+    class="rounded-md p-2 border bg-primary text-white mx-auto w-full"
     :class="{
       'bg-primary hover:bg-[#003EFF] text-white': !props.disabled && props.buttonType === 'normal',
       'bg-white hover:bg-gray-100 text-gray-700 border-gray-300': !props.disabled && props.buttonType === 'outline',
@@ -22,7 +22,7 @@ const props = defineProps<{
     :disabled="props.disabled || props.isLoading"
     @click="props.onClick"
   >
-    <div class="flex flex-row">
+    <div class="flex flex-row justify-center py-2">
       <IconLoading v-if="props.isLoading" />
       <slot />
     </div>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 </script>
 <template>
-  <Html lang="ja">
+  <Html lang="ja" class="bg-gray">
     <Header />
-    <slot />
+    <div class="w-[90%] mx-auto">
+      <slot />
+    </div>
   </Html>
 </template>

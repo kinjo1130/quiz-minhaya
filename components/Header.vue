@@ -25,7 +25,7 @@ const logout = () => {
 const { user } = useAuth()
 </script>
 <template>
-  <header class="bg-blue-500 py-4">
+  <header class="bg-primary py-4 px-6">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center text-white">
         <svg class="h-8 w-8 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
