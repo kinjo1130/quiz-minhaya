@@ -48,7 +48,7 @@ watch(room, async (room) => {
     return
   }
   // questionsIdsから取得してくる
-  console.log('取得している問題のID', room.questionIds)
+  // console.log('取得している問題のID', room.questionIds)
   const quizId = room.questionIds[room.currentQuestionIndex]
   console.log(quizList.value)
   const quiz = quizList.value.find(quiz => quiz.id === quizId)
@@ -83,7 +83,7 @@ watch(respondents, (respondents) => {
               return [uid, { ...player, state: 'neutral' }] as [string, QuizPlayer]
             }))
       })
-    }, 3000)
+    }, 5000)
   }
 })
 
