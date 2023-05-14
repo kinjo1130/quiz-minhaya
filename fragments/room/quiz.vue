@@ -47,14 +47,21 @@ watch(room, async (room) => {
     // TODO: returnする前に適当な場所にリダイレクトすべき
     return
   }
+  // console.log('watchで新しくなったroom', room)
   // questionsIdsから取得してくる
   // console.log('取得している問題のID', room.questionIds)
+  console.log('room.currentQuestionIndex', room.currentQuestionIndex)
   const quizId = room.questionIds[room.currentQuestionIndex]
-  console.log(quizList.value)
+  // console.log('クイズID', quizId)
+  // console.log(quizList.value)
   const quiz = quizList.value.find(quiz => quiz.id === quizId)
-  console.log('quiz', quiz)
-  if (!quiz) {
+  // console.log('quiz', quiz)
+  // 調べないといけないのはquizがなぜundefiendになるのか
+  // 理由はIndexが0から1になって、またそこから2になっている
+  // 要は、一問正解するとIndexが増えている
+  if (!quiz || room.currentQuestionIndex > room.questionIds.length) {
     // クイズがないなら終わり
+    console.log('クイズがないので終了')
     await updateDoc(roomRef.value, {
       state: 'finished'
     })
@@ -66,24 +73,31 @@ watch(room, async (room) => {
 // immediateないと最初の問題が出てこない
 }, { immediate: true })
 
-watch(respondents, (respondents) => {
+watch(respondents, async (respondents) => {
   // 解答者が揃うまでは次に進まない
   // タイムアウト設定とかは別の場所でする
+  console.log({ respondents })
+  console.log('canBeRespondent.value', canBeRespondent.value)
   if (canBeRespondent.value) { return }
 
   // すべての解答者の正誤が確定したら
+  // ここが２回走っていることがある
+  console.log('全ての回答者の正誤が確定したら')
+  // ここの条件式がおかしい
+  // ここを判定する前に変わっている説？？
+  console.log('回答者がいるかどうか', respondents.every(respondent => respondent.state.includes('correct')))
   if (respondents.every(respondent => respondent.state.includes('correct'))) {
     console.log('update')
-    setTimeout(async () => {
-      await updateDoc(roomRef.value, {
-        currentQuestionIndex: room.value!.currentQuestionIndex + 1,
-        players: Object.fromEntries(
-          Object.entries(room.value?.players ?? {})
-            .map(([uid, player]) => {
-              return [uid, { ...player, state: 'neutral' }] as [string, QuizPlayer]
-            }))
-      })
-    }, 5000)
+    // setTimeout(async () => {
+    await updateDoc(roomRef.value, {
+      currentQuestionIndex: room.value!.currentQuestionIndex + 1,
+      players: Object.fromEntries(
+        Object.entries(room.value?.players ?? {})
+          .map(([uid, player]) => {
+            return [uid, { ...player, state: 'neutral' }] as [string, QuizPlayer]
+          }))
+    })
+    // }, 3000)
   }
 })
 
